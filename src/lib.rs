@@ -5,7 +5,7 @@ pub mod walk;
 
 use ethereum_types::{H160, H256, U256};
 use rlp::RlpStream;
-use smallvec::SmallVec;
+use smallvec::{SmallVec};
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::fs::{remove_dir, remove_file};
@@ -159,6 +159,24 @@ impl<'db> MutableTransaction<'db> {
             self.storage.insert(address, map);
             Ok(())
         }
+    }
+
+    pub fn has_storage(&mut self, address: H160) -> anyhow::Result<bool> {
+        if let Some(storage) = self.storage.get(&address) {
+            for v in storage.values() {
+                if v != &U256::zero() {
+                    return Ok(true)
+                }
+            }
+        }
+
+        if self.destroyed_storage.contains(&address) {
+            return Ok(false);
+        }
+
+        let mut db_key = vec![1];
+        db_key.extend_from_slice(address.as_bytes());
+        self.tx.contains_prefix(db_key.as_slice())
     }
 
     pub fn storage(&self, address: H160, key: H256) -> anyhow::Result<U256> {

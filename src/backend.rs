@@ -123,6 +123,30 @@ impl<'txn> BackendTransaction<'txn> {
         Ok(())
     }
 
+    pub fn contains_prefix(&self, prefix: &[u8]) -> anyhow::Result<bool> {
+        for (k,v ) in self.cache.range((Excluded(ArrayVec::<u8, 96>::try_from(prefix)?), Unbounded)) {
+            if !k.starts_with(prefix) {
+                break
+            }
+            if v.is_some() {
+                return Ok(true);
+            }
+        }
+
+        Ok(if let Some(txn) = &self.txn {
+            let mut cursor = txn.cursor(&txn.open_db(None)?)?;
+            match cursor.set_range::<(), ()>(prefix)? {
+                Some((_, ())) => match cursor.next::<Cow<[u8]>, ()>()? {
+                    Some((k, ())) => k.starts_with(prefix),
+                    None => false,
+                },
+                None => return Ok(false),
+            }
+        } else {
+            false
+        })
+    }
+
     pub fn flush(&mut self) -> anyhow::Result<()> {
         match &self.txn {
             None => Ok(()),

@@ -105,9 +105,8 @@ impl<'txn> BackendTransaction<'txn> {
                 None => return Ok(()),
             };
             loop {
-                match cursor.next()? {
-                    None => break,
-                    Some(((), ())) => {}
+                if cursor.next::<(),()>()?.is_none() {
+                    break
                 }
                 match cursor.get_current::<Cow<[u8]>, ()>()? {
                     None => break,

@@ -89,7 +89,7 @@ pub struct MutableTransaction<'db> {
     destroyed_storage: HashSet<H160>,
 }
 
-impl<'db> MutableTransaction<'db> {
+impl MutableTransaction<'_> {
     pub fn metadata(&self, key: &[u8]) -> anyhow::Result<Option<Cow<[u8]>>> {
         let mut db_key = vec![0];
         db_key.extend_from_slice(key);

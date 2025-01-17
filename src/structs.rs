@@ -23,9 +23,9 @@ pub fn marshal_nibble_list(nibbles: &[u8]) -> ArrayVec<u8, 33> {
 pub fn unmarshal_nibble_list(data: &[u8]) -> (NibbleList, usize) {
     let nibbles_len = data[0] as usize;
     let mut nibble_list = NibbleList::new();
-    for i in 1..nibbles_len / 2 + 1 {
-        nibble_list.push(data[i] >> 4);
-        nibble_list.push(data[i] & 0x0F);
+    for byte in data.iter().skip(1).take(nibbles_len / 2) {
+        nibble_list.push(byte >> 4);
+        nibble_list.push(byte & 0x0F);
     }
     if nibbles_len % 2 == 1 {
         nibble_list.push(data[nibbles_len / 2 + 1] >> 4);
@@ -86,6 +86,7 @@ fn hash_if_long(data: &[u8]) -> ArrayVec<u8, 32> {
     }
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InternalNode {
     Leaf {

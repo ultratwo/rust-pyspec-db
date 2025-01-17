@@ -58,7 +58,7 @@ impl<'db, 'txn, 'a> Walker<'a, 'db, 'txn> {
         while self
             .dirty_list
             .last()
-            .map_or(false, |(k, _)| k.starts_with(&self.nibble_list))
+            .is_some_and(|(k, _)| k.starts_with(&self.nibble_list))
         {
             current_node = match current_node {
                 None => self.walk_empty()?,
@@ -173,7 +173,7 @@ impl<'db, 'txn, 'a> Walker<'a, 'db, 'txn> {
         extension_nibbles: NibbleList,
         mut subnodes: [ArrayVec<u8, 32>; 16],
     ) -> anyhow::Result<Option<InternalNode>> {
-        if self.dirty_list.last().map_or(false, |(k, _)| {
+        if self.dirty_list.last().is_some_and(|(k, _)| {
             !k[self.nibble_list.len()..].starts_with(extension_nibbles.as_slice())
         }) {
             return self.split_extension(extension_nibbles, subnodes);
@@ -182,7 +182,7 @@ impl<'db, 'txn, 'a> Walker<'a, 'db, 'txn> {
         while self
             .dirty_list
             .last()
-            .map_or(false, |(k, _)| k.starts_with(&self.nibble_list))
+            .is_some_and(|(k, _)| k.starts_with(&self.nibble_list))
         {
             let (key, _) = self.dirty_list.last().unwrap();
             let index = key[self.nibble_list.len()];
